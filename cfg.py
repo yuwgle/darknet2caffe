@@ -1,4 +1,4 @@
-import torch
+#import torch
 from collections import OrderedDict
 
 def parse_cfg(cfgfile):
@@ -134,8 +134,10 @@ def print_cfg_nicely(blocks):
                 prev_width = out_widths[layers[0]]
                 prev_height = out_heights[layers[0]]
                 prev_filters = out_filters[layers[0]]
+                # print(len(out_widths))
             elif len(layers) == 2:
                 print('%5d %-6s %d %d' % (ind, 'route', layers[0], layers[1]))
+                # print(len(out_widths))
                 prev_width = out_widths[layers[0]]
                 prev_height = out_heights[layers[0]]
                 assert(prev_width == out_widths[layers[1]])
@@ -171,8 +173,23 @@ def print_cfg_nicely(blocks):
             out_widths.append(1)
             out_heights.append(1)
             out_filters.append(prev_filters)
+        elif block['type'] == 'upsample':
+            scale = int(block['stride'])
+            width = prev_width*scale
+            height = prev_height*scale
+            print('%5d %-6s    %d          %3d x %3d x%4d   ->   %3d x %3d x%4d' % (ind, 'upsample', scale, prev_width, prev_height, prev_filters, width, height, prev_filters))
+            prev_width = width
+            prev_height = height
+            
+            out_widths.append(width)
+            out_heights.append(height)
+            out_filters.append(prev_filters)
         else:
             print('unknown type %s' % (block['type']))
+
+            out_widths.append(width)
+            out_heights.append(height)
+            out_filters.append(prev_filters)
 
 def load_conv(buf, start, conv_model):
     num_w = conv_model.weight.numel()
